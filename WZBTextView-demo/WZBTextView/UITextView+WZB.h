@@ -7,9 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
-
+/*
+ currentTextViewHeight TextView高度变化通知
+ */
 typedef void(^textViewHeightDidChangedBlock)(CGFloat currentTextViewHeight);
-typedef void(^TextCountChangeBlock)(CGFloat currentTextCount);
+/*
+ currentTextCount 当前字数通知
+ isInputReturn  是否输入return
+ */
+typedef void(^TextCountChangeBlock)(CGFloat currentTextCount,BOOL isInputReturn);
 
 @interface UITextView (WZB)
 
@@ -22,14 +28,18 @@ typedef void(^TextCountChangeBlock)(CGFloat currentTextCount);
 /* 最大高度，如果需要随文字改变高度的时候使用 */
 @property (nonatomic, assign) CGFloat wzb_maxHeight;
 
-/* 最小高度，如果需要随文字改变高度的时候使用 */
+/* 最小高度，如果需要随文字改变高度的时候使用,默认最小高度就是textview初次高度 */
 @property (nonatomic, assign) CGFloat wzb_minHeight;
-
 /* 文本最大数量 */
 @property (nonatomic, assign) NSInteger maxCountText;
 
+/* 是否点击return是否关闭键盘 */
+@property (nonatomic, assign) BOOL isReturnResignResponder;
+
+/* 高度改变通知 */
 @property (nonatomic, copy) textViewHeightDidChangedBlock wzb_textViewHeightDidChanged;
 
+/* 文本字数改变 */
 @property (nonatomic, copy) TextCountChangeBlock textCountChangeBlock;
 
 /* 获取图片数组 */

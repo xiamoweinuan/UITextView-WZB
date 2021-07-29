@@ -28,6 +28,11 @@ static const void *WZBTextViewImageArrayKey = &WZBTextViewImageArrayKey;
 static const void *WZBTextViewLastHeightKey = &WZBTextViewLastHeightKey;
 
 static const void* TextCountKey = &TextCountKey;
+
+static const void* ReturnResignResponderKey = &ReturnResignResponderKey;
+
+static const void* LastTextKey = &LastTextKey;
+
 @interface UITextView ()
 
 // 存储添加的图片
@@ -35,6 +40,8 @@ static const void* TextCountKey = &TextCountKey;
 // 存储最后一次改变高度后的值
 @property (nonatomic, assign) CGFloat lastHeight;
 
+// 存储最后一次文本数据
+@property (nonatomic, assign) NSString* lastText;
 @end
 
 @implementation UITextView (WZB)
@@ -75,7 +82,7 @@ static const void* TextCountKey = &TextCountKey;
         
         // 初始化数组
         self.wzb_imageArray = [NSMutableArray array];
-        
+        self.wzb_minHeight = self.frame.size.height;
         placeholderView = [[UITextView alloc] init];
         // 动态添加属性的本质是: 让对象的某个属性与值产生关联
         objc_setAssociatedObject(self, WZBPlaceholderViewKey, placeholderView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -97,8 +104,9 @@ static const void* TextCountKey = &TextCountKey;
         
         // 监听属性
         for (NSString *property in propertys) {
-            [self addObserver:self forKeyPath:property options:NSKeyValueObservingOptionNew context:nil];
+            [self addObserver:self forKeyPath:property options:NSKeyValueObservingOptionOld context:nil];
         }
+        
         
     }
     return placeholderView;
@@ -164,7 +172,7 @@ static const void* TextCountKey = &TextCountKey;
     return [objc_getAssociatedObject(self, WZBTextViewMinHeightKey) doubleValue];
 }
 
-- (void)setWzb_textViewHeightDidChanged:(textViewHeightDidChangedBlock)wzb_textViewHeightDidChanged
+-(void)setWzb_textViewHeightDidChanged:(textViewHeightDidChangedBlock)wzb_textViewHeightDidChanged
 {
     objc_setAssociatedObject(self, WZBTextViewHeightDidChangedBlockKey, wzb_textViewHeightDidChanged, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
@@ -174,7 +182,7 @@ static const void* TextCountKey = &TextCountKey;
 }
 - (TextCountChangeBlock)textCountChangeBlock
 {
-    void(^textCountChangeBlock)(CGFloat currentHeight) = objc_getAssociatedObject(self, TextDidChangedBlockKey);
+    void(^textCountChangeBlock)(CGFloat currentTextCount,BOOL isInputReturn) = objc_getAssociatedObject(self, TextDidChangedBlockKey);
     return textCountChangeBlock;
 }
 -(NSInteger)maxCountText{
@@ -182,6 +190,12 @@ static const void* TextCountKey = &TextCountKey;
 }
 -(void)setMaxCountText:(NSInteger)maxCountText{
     objc_setAssociatedObject(self, TextCountKey, [NSString stringWithFormat:@"%ld", maxCountText], OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+-(BOOL)isReturnResignResponder{
+    return  [objc_getAssociatedObject(self, ReturnResignResponderKey) boolValue];
+}
+-(void)setIsReturnResignResponder:(BOOL)isReturnResignResponder{
+    objc_setAssociatedObject(self, ReturnResignResponderKey, [NSNumber numberWithBool:isReturnResignResponder], OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
 - (textViewHeightDidChangedBlock)wzb_textViewHeightDidChanged
@@ -194,6 +208,7 @@ static const void* TextCountKey = &TextCountKey;
 {
     return self.wzb_imageArray;
 }
+
 
 - (void)setLastHeight:(CGFloat)lastHeight {
     objc_setAssociatedObject(self, WZBTextViewLastHeightKey, [NSString stringWithFormat:@"%lf", lastHeight], OBJC_ASSOCIATION_COPY_NONATOMIC);
@@ -209,6 +224,13 @@ static const void* TextCountKey = &TextCountKey;
 
 - (NSMutableArray *)wzb_imageArray {
     return objc_getAssociatedObject(self, WZBTextViewImageArrayKey);
+}
+-(NSString *)lastText{
+    return objc_getAssociatedObject(self, LastTextKey);
+}
+
+-(void)setLastText:(NSString *)lastText{
+    objc_setAssociatedObject(self, LastTextKey, lastText, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 - (void)wzb_autoHeightWithMaxHeight:(CGFloat)maxHeight
@@ -309,23 +331,43 @@ static bool autoHeight = NO;
 - (void)textViewTextChange {
     UITextView *placeholderView = objc_getAssociatedObject(self, WZBPlaceholderViewKey);
     
-    // 如果有值才去调用，这步很重要
+    //点击return是否关闭键盘
+    if (self.lastText.length<self.text.length ) {
+        NSString* str = [self.text substringFromIndex:self.lastText.length];
+        if ([str isEqualToString:@"\n"]) {
+            self.text = self.lastText;
+            
+            //当前字数通知
+            if (self.textCountChangeBlock) {
+                self.textCountChangeBlock(self.text.length,YES);
+            }
+            if ( self.isReturnResignResponder) {
+                [self resignFirstResponder];
+                return;
+            }
+        }
+        
+    }
+    
+    // 设置placeholderView隐藏显示
     if (placeholderView) {
         self.wzb_placeholderView.hidden = (self.text.length > 0 && self.text);
     }
     
-    if (self.maxCountText>0) {
-        if (self.text.length>self.maxCountText) {
+ 
+    //限制输入最大数量
+    if ( self.maxCountText>0) {
+        if (  self.text.length>self.maxCountText) {
             self.text = [self.text substringToIndex:self.maxCountText];
-
         }
-
     }
     
+    //当前字数通知
     if (self.textCountChangeBlock) {
-        self.textCountChangeBlock(self.text.length);
+        self.textCountChangeBlock(self.text.length,NO);
     }
     
+
     
     // 如果没有启用自动高度，不执行以下方法
     if (!autoHeight) return;
@@ -353,6 +395,7 @@ static bool autoHeight = NO;
     }
     
     if (!self.isFirstResponder) [self becomeFirstResponder];
+    self.lastText = self.text;
 }
 
 // 判断是否有placeholder值，这步很重要
@@ -367,95 +410,5 @@ static bool autoHeight = NO;
     return NO;
 }
 
-#pragma mark - 过期
-//- (NSString *)placeholder
-//{
-//    return self.wzb_placeholder;
-//}
-//
-//- (void)setPlaceholder:(NSString *)placeholder
-//{
-//    self.wzb_placeholder = placeholder;
-//}
-//
-//- (UIColor *)placeholderColor
-//{
-//    return self.wzb_placeholderColor;
-//}
-//
-//- (void)setPlaceholderColor:(UIColor *)placeholderColor
-//{
-//    self.wzb_placeholderColor = placeholderColor;
-//}
-//
-//- (void)setMaxHeight:(CGFloat)maxHeight
-//{
-//    self.wzb_maxHeight = maxHeight;
-//}
-//
-//- (CGFloat)maxHeight
-//{
-//    return self.maxHeight;
-//}
-//
-//- (void)setMinHeight:(CGFloat)minHeight
-//{
-//    self.wzb_minHeight = minHeight;
-//}
-//
-//- (CGFloat)minHeight
-//{
-//    return self.wzb_minHeight;
-//}
-//
-//- (void)setTextViewHeightDidChanged:(textViewHeightDidChangedBlock)textViewHeightDidChanged
-//{
-//    self.wzb_textViewHeightDidChanged = textViewHeightDidChanged;
-//}
-//
-//- (textViewHeightDidChangedBlock)textViewHeightDidChanged
-//{
-//    return self.wzb_textViewHeightDidChanged;
-//}
-//
-//- (NSArray *)getImages
-//{
-//    return self.wzb_getImages;
-//}
-//
-//- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight
-//{
-//    [self wzb_autoHeightWithMaxHeight:maxHeight];
-//}
-//
-//- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight textViewHeightDidChanged:(void(^)(CGFloat currentTextViewHeight))textViewHeightDidChanged
-//{
-//    [self wzb_autoHeightWithMaxHeight:maxHeight textViewHeightDidChanged:textViewHeightDidChanged];
-//}
-//
-//- (void)addImage:(UIImage *)image
-//{
-//    [self wzb_addImage:image];
-//}
-//
-//- (void)addImage:(UIImage *)image size:(CGSize)size
-//{
-//    [self wzb_addImage:image size:size];
-//}
-//
-//- (void)insertImage:(UIImage *)image size:(CGSize)size index:(NSInteger)index
-//{
-//    [self wzb_insertImage:image size:size index:index];
-//}
-//
-//- (void)addImage:(UIImage *)image multiple:(CGFloat)multiple
-//{
-//    [self wzb_addImage:image multiple:multiple];
-//}
-//
-//- (void)insertImage:(UIImage *)image multiple:(CGFloat)multiple index:(NSInteger)index
-//{
-//    [self wzb_insertImage:image multiple:multiple index:index];
-//}
 
 @end
