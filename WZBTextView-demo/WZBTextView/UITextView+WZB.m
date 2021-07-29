@@ -19,11 +19,15 @@ static const void *WZBTextViewMaxHeightKey = &WZBTextViewMaxHeightKey;
 static const void *WZBTextViewMinHeightKey = &WZBTextViewMinHeightKey;
 // 高度变化的block
 static const void *WZBTextViewHeightDidChangedBlockKey = &WZBTextViewHeightDidChangedBlockKey;
+// 文本变化的block
+static const void *TextDidChangedBlockKey = &TextDidChangedBlockKey;
+
 // 存储添加的图片
 static const void *WZBTextViewImageArrayKey = &WZBTextViewImageArrayKey;
 // 存储最后一次改变高度后的值
 static const void *WZBTextViewLastHeightKey = &WZBTextViewLastHeightKey;
 
+static const void* TextCountKey = &TextCountKey;
 @interface UITextView ()
 
 // 存储添加的图片
@@ -164,6 +168,21 @@ static const void *WZBTextViewLastHeightKey = &WZBTextViewLastHeightKey;
 {
     objc_setAssociatedObject(self, WZBTextViewHeightDidChangedBlockKey, wzb_textViewHeightDidChanged, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
+- (void)setTextCountChangeBlock:(TextCountChangeBlock)textCountChangeBlock
+{
+    objc_setAssociatedObject(self, TextDidChangedBlockKey, textCountChangeBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+- (TextCountChangeBlock)textCountChangeBlock
+{
+    void(^textCountChangeBlock)(CGFloat currentHeight) = objc_getAssociatedObject(self, TextDidChangedBlockKey);
+    return textCountChangeBlock;
+}
+-(NSInteger)maxCountText{
+    return [objc_getAssociatedObject(self, TextCountKey) intValue];
+}
+-(void)setMaxCountText:(NSInteger)maxCountText{
+    objc_setAssociatedObject(self, TextCountKey, [NSString stringWithFormat:@"%ld", maxCountText], OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
 
 - (textViewHeightDidChangedBlock)wzb_textViewHeightDidChanged
 {
@@ -294,6 +313,20 @@ static bool autoHeight = NO;
     if (placeholderView) {
         self.wzb_placeholderView.hidden = (self.text.length > 0 && self.text);
     }
+    
+    if (self.maxCountText>0) {
+        if (self.text.length>self.maxCountText) {
+            self.text = [self.text substringToIndex:self.maxCountText];
+
+        }
+
+    }
+    
+    if (self.textCountChangeBlock) {
+        self.textCountChangeBlock(self.text.length);
+    }
+    
+    
     // 如果没有启用自动高度，不执行以下方法
     if (!autoHeight) return;
     if (self.wzb_maxHeight >= self.bounds.size.height) {
@@ -335,94 +368,94 @@ static bool autoHeight = NO;
 }
 
 #pragma mark - 过期
-- (NSString *)placeholder
-{
-    return self.wzb_placeholder;
-}
-
-- (void)setPlaceholder:(NSString *)placeholder
-{
-    self.wzb_placeholder = placeholder;
-}
-
-- (UIColor *)placeholderColor
-{
-    return self.wzb_placeholderColor;
-}
-
-- (void)setPlaceholderColor:(UIColor *)placeholderColor
-{
-    self.wzb_placeholderColor = placeholderColor;
-}
-
-- (void)setMaxHeight:(CGFloat)maxHeight
-{
-    self.wzb_maxHeight = maxHeight;
-}
-
-- (CGFloat)maxHeight
-{
-    return self.maxHeight;
-}
-
-- (void)setMinHeight:(CGFloat)minHeight
-{
-    self.wzb_minHeight = minHeight;
-}
-
-- (CGFloat)minHeight
-{
-    return self.wzb_minHeight;
-}
-
-- (void)setTextViewHeightDidChanged:(textViewHeightDidChangedBlock)textViewHeightDidChanged
-{
-    self.wzb_textViewHeightDidChanged = textViewHeightDidChanged;
-}
-
-- (textViewHeightDidChangedBlock)textViewHeightDidChanged
-{
-    return self.wzb_textViewHeightDidChanged;
-}
-
-- (NSArray *)getImages
-{
-    return self.wzb_getImages;
-}
-
-- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight
-{
-    [self wzb_autoHeightWithMaxHeight:maxHeight];
-}
-
-- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight textViewHeightDidChanged:(void(^)(CGFloat currentTextViewHeight))textViewHeightDidChanged
-{
-    [self wzb_autoHeightWithMaxHeight:maxHeight textViewHeightDidChanged:textViewHeightDidChanged];
-}
-
-- (void)addImage:(UIImage *)image
-{
-    [self wzb_addImage:image];
-}
-
-- (void)addImage:(UIImage *)image size:(CGSize)size
-{
-    [self wzb_addImage:image size:size];
-}
-
-- (void)insertImage:(UIImage *)image size:(CGSize)size index:(NSInteger)index
-{
-    [self wzb_insertImage:image size:size index:index];
-}
-
-- (void)addImage:(UIImage *)image multiple:(CGFloat)multiple
-{
-    [self wzb_addImage:image multiple:multiple];
-}
-
-- (void)insertImage:(UIImage *)image multiple:(CGFloat)multiple index:(NSInteger)index
-{
-    [self wzb_insertImage:image multiple:multiple index:index];
-}
+//- (NSString *)placeholder
+//{
+//    return self.wzb_placeholder;
+//}
+//
+//- (void)setPlaceholder:(NSString *)placeholder
+//{
+//    self.wzb_placeholder = placeholder;
+//}
+//
+//- (UIColor *)placeholderColor
+//{
+//    return self.wzb_placeholderColor;
+//}
+//
+//- (void)setPlaceholderColor:(UIColor *)placeholderColor
+//{
+//    self.wzb_placeholderColor = placeholderColor;
+//}
+//
+//- (void)setMaxHeight:(CGFloat)maxHeight
+//{
+//    self.wzb_maxHeight = maxHeight;
+//}
+//
+//- (CGFloat)maxHeight
+//{
+//    return self.maxHeight;
+//}
+//
+//- (void)setMinHeight:(CGFloat)minHeight
+//{
+//    self.wzb_minHeight = minHeight;
+//}
+//
+//- (CGFloat)minHeight
+//{
+//    return self.wzb_minHeight;
+//}
+//
+//- (void)setTextViewHeightDidChanged:(textViewHeightDidChangedBlock)textViewHeightDidChanged
+//{
+//    self.wzb_textViewHeightDidChanged = textViewHeightDidChanged;
+//}
+//
+//- (textViewHeightDidChangedBlock)textViewHeightDidChanged
+//{
+//    return self.wzb_textViewHeightDidChanged;
+//}
+//
+//- (NSArray *)getImages
+//{
+//    return self.wzb_getImages;
+//}
+//
+//- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight
+//{
+//    [self wzb_autoHeightWithMaxHeight:maxHeight];
+//}
+//
+//- (void)autoHeightWithMaxHeight:(CGFloat)maxHeight textViewHeightDidChanged:(void(^)(CGFloat currentTextViewHeight))textViewHeightDidChanged
+//{
+//    [self wzb_autoHeightWithMaxHeight:maxHeight textViewHeightDidChanged:textViewHeightDidChanged];
+//}
+//
+//- (void)addImage:(UIImage *)image
+//{
+//    [self wzb_addImage:image];
+//}
+//
+//- (void)addImage:(UIImage *)image size:(CGSize)size
+//{
+//    [self wzb_addImage:image size:size];
+//}
+//
+//- (void)insertImage:(UIImage *)image size:(CGSize)size index:(NSInteger)index
+//{
+//    [self wzb_insertImage:image size:size index:index];
+//}
+//
+//- (void)addImage:(UIImage *)image multiple:(CGFloat)multiple
+//{
+//    [self wzb_addImage:image multiple:multiple];
+//}
+//
+//- (void)insertImage:(UIImage *)image multiple:(CGFloat)multiple index:(NSInteger)index
+//{
+//    [self wzb_insertImage:image multiple:multiple index:index];
+//}
 
 @end

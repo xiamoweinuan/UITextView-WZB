@@ -60,24 +60,24 @@
 }
 
 - (void)test2 {
-    self.textView.frame = (CGRect){0, 0, self.view.bounds.size.width, 30};
+    self.textView.frame = (CGRect){0, 0, 100, 30};
     self.textView.center = self.view.center;
     self.textView.wzb_placeholder = @"自动换行改变高度";
     self.textView.layer.borderColor = [UIColor lightGrayColor].CGColor;
     self.textView.layer.borderWidth = 1;
     
-    // 避免循环引用
-    //    __weak typeof (self) weakSelf = self;
-    //    __weak typeof (textView) weakTextView = textView;
+//     避免循环引用
+        __weak typeof (self) weakSelf = self;
+        __weak typeof (self.textView) weakTextView = self.textView;
     
     // 最大高度为100，监听高度改变的block
     [self.textView wzb_autoHeightWithMaxHeight:100 textViewHeightDidChanged:^(CGFloat currentTextViewHeight) {
-        //        CGRect frame = weakTextView.frame;
-        //        frame.size.height = currentTextViewHeight;
-        //        [UIView animateWithDuration:0.2 animations:^{
-        //            weakTextView.frame = frame;
-        //            weakTextView.center = weakSelf.view.center;
-        //        }];
+                CGRect frame = weakTextView.frame;
+                frame.size.height = currentTextViewHeight;
+                [UIView animateWithDuration:0.2 animations:^{
+                    weakTextView.frame = frame;
+                    weakTextView.center = weakSelf.view.center;
+                }];
     }];
 }
 

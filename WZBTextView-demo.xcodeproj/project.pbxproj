@@ -225,7 +225,7 @@
 				TargetAttributes = {
 					986FE9971DD9AB190091617F = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = 8HYJW979TJ;
+						DevelopmentTeam = ALK2RYKYVK;
 						ProvisioningStyle = Automatic;
 					};
 					986FE9B01DD9AB190091617F = {
@@ -247,6 +247,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -445,12 +446,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 8HYJW979TJ;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = ALK2RYKYVK;
 				INFOPLIST_FILE = "WZBTextView-demo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "WZB.WZBTextView-demo";
+				PRODUCT_BUNDLE_IDENTIFIER = "WZB.WZBTextView-demo1111";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Debug;
 		};
@@ -458,12 +462,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 8HYJW979TJ;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = ALK2RYKYVK;
 				INFOPLIST_FILE = "WZBTextView-demo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "WZB.WZBTextView-demo";
+				PRODUCT_BUNDLE_IDENTIFIER = "WZB.WZBTextView-demo1111";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Release;
 		};
